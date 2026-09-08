@@ -10,17 +10,18 @@ const EMPTY_BOARD = Array.from({ length: 64 }, () => 0);
 const OBJECTIVE_LABELS: Record<string, string> = { clear_tiles: 'Clear tiles', collect_shells: 'Collect shells', unlock_treasure: 'Unlock treasure', rescue_creatures: 'Rescue creatures', break_coral: 'Break coral', mixed: 'Complete objectives' };
 const OBSTACLE_LABELS: Record<string, string> = { locked_tiles: 'Locked', ice: 'Ice', color_blockers: 'Blocker', chains: 'Chain', timed_bombs: 'Bomb', double_blockers: 'Double blocker', moving_blockers: 'Moving blocker', treasure_locks: 'Treasure lock', expert_chains: 'Expert chain' };
 
+type ObstacleEntry = Record<string, unknown>;
 function obstacleAt(state: Record<string, unknown>, cell: number) {
   for (const [type, raw] of Object.entries(state)) {
     if (!Array.isArray(raw)) continue;
-    const hit = raw.find((item) => item && typeof item === 'object' && Number((item as Record<string, unknown>).cell) === cell);
-    if (hit) return { type, data: hit as Record<string, unknown> };
+    const hit = raw.find((item: unknown) => item && typeof item === 'object' && Number((item as ObstacleEntry).cell) === cell);
+    if (hit) return { type, data: hit as ObstacleEntry };
   }
   return null;
 }
 
 function specialAt(specialState: unknown[], cell: number) {
-  return specialState.find((item) => item && typeof item === 'object' && Number((item as Record<string, unknown>).cell) === cell) as Record<string, unknown> | undefined;
+  return specialState.find((item: unknown) => item && typeof item === 'object' && Number((item as ObstacleEntry).cell) === cell) as ObstacleEntry | undefined;
 }
 
 function App() {
@@ -55,7 +56,7 @@ function App() {
   const progress = game?.objective_progress ?? 0;
   const target = game?.objective_target;
   const obstacles = game?.obstacle_state ?? {};
-  const obstacleCount = useMemo(() => Object.values(obstacles).reduce((sum, value) => sum + (Array.isArray(value) ? value.length : 0), 0), [obstacles]);
+  const obstacleCount = useMemo(() => Object.values(obstacles).reduce<number>((sum, value) => sum + (Array.isArray(value) ? value.length : 0), 0), [obstacles]);
   const resultLabel = game?.result === 'WIN' ? 'Treasure secured!' : game?.result === 'FAIL' ? 'Try again' : null;
 
   return <main className="game-shell">
@@ -68,7 +69,7 @@ function App() {
           const obstacle = obstacleAt(obstacles, index + 1);
           const special = specialAt(game?.special_state ?? [], index + 1);
           const specialType = String(special?.type ?? '');
-          const obstacleLabel = obstacle ? OBSTACLE_LABELS[obstacle.type] ?? obstacle.type.replaceAll('_', ' ') : '';
+          const obstacleLabel = obstacle ? (OBSTACLE_LABELS[obstacle.type] ?? obstacle.type.replaceAll('_', ' ')) : '';
           const style = { '--tile-color': color ? palette[color] : 'transparent' } as CSSProperties;
           return <button key={index} className={`tile${obstacle ? ' obstacle' : ''}${special ? ' special' : ''}`} style={style} onClick={() => void handleCell(index)} disabled={busy || !color || game?.result !== 'CONTINUE'} aria-label={`${color ? `Color tile ${color}` : 'Empty cell'}${obstacle ? `, ${obstacleLabel}` : ''}${special ? `, ${specialType}` : ''}, cell ${index + 1}`}>
             <span />{obstacle && <b className="obstacle-badge">{obstacleLabel.slice(0, 1)}</b>}{special && <b className="special-badge">{specialType === 'line' ? '↔' : specialType === 'cross' ? '+' : specialType === 'bomb' ? '✦' : '🌈'}</b>}
