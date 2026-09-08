@@ -7,8 +7,11 @@ export type GameState = {
   resumed?: boolean;
   seed?: number;
   move_count: number;
+  moves_limit: number;
   board_state: number[];
   state_hash: string;
+  objective: string | null;
+  objective_target: number | null;
   objective_progress: number;
   result: 'CONTINUE' | 'WIN' | 'FAIL' | null;
   status?: 'active' | 'won' | 'failed' | 'expired' | 'aborted';
