@@ -17,6 +17,25 @@ export type ChestResult = {
   balance?: number;
 };
 
+export type AvailableChest = {
+  id: string;
+  chest_code: string;
+  claim_key: string;
+  source_type: string;
+  source_id: string;
+  created_at: string;
+};
+
+export async function getAvailableChests(): Promise<AvailableChest[]> {
+  await requireSession();
+  const { data, error } = await supabase.functions.invoke('rewards-v1', {
+    body: { action: 'available_chest' },
+  });
+  if (error) throw new Error(`CHEST_LIST_ERROR:${error.message}`);
+  if (!data || data.error) throw new Error(String(data?.error ?? 'CHEST_LIST_FAILED'));
+  return Array.isArray(data.chests) ? data.chests as AvailableChest[] : [];
+}
+
 export async function openChest(chestCode: string, claimKey: string): Promise<ChestResult> {
   await requireSession();
   const { data, error } = await supabase.functions.invoke('rewards-v1', {
