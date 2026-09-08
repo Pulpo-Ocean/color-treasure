@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using ColorTreasure.Runtime.Gameplay;
 
 namespace ColorTreasure.Runtime.Board
 {
     public sealed class BoardModel
     {
         private readonly TileColor[,] cells;
+        private readonly SpecialKind[,] specials;
         private readonly Random random;
 
         public int Width { get; }
@@ -22,11 +24,19 @@ namespace ColorTreasure.Runtime.Board
             Height = height;
             ColorCount = colorCount;
             cells = new TileColor[width, height];
+            specials = new SpecialKind[width, height];
             random = new Random(seed);
             FillEmptyCells();
         }
 
         public TileColor Get(int x, int y) => cells[x, y];
+        public SpecialKind GetSpecial(int x, int y) => specials[x, y];
+
+        public void SetSpecial(int x, int y, SpecialKind kind)
+        {
+            if (!Inside(x, y)) throw new ArgumentOutOfRangeException();
+            specials[x, y] = kind;
+        }
 
         public int ClearGroup(int x, int y)
         {
@@ -36,12 +46,28 @@ namespace ColorTreasure.Runtime.Board
             var group = FindGroup(x, y);
             if (group.Count < 2) return 0;
 
-            foreach (var cell in group)
-                cells[cell.x, cell.y] = TileColor.None;
-
-            ApplyGravity();
-            FillEmptyCells();
+            ClearCells(group);
+            CollapseAndRefill();
             return group.Count;
+        }
+
+        public int ClearCells(IReadOnlyList<(int x, int y)> affectedCells)
+        {
+            if (affectedCells == null || affectedCells.Count == 0) return 0;
+
+            var cleared = 0;
+            foreach (var cell in affectedCells)
+            {
+                if (!Inside(cell.x, cell.y) || cells[cell.x, cell.y] == TileColor.None)
+                    continue;
+
+                cells[cell.x, cell.y] = TileColor.None;
+                specials[cell.x, cell.y] = SpecialKind.None;
+                cleared++;
+            }
+
+            CollapseAndRefill();
+            return cleared;
         }
 
         public IReadOnlyList<(int x, int y)> FindGroup(int x, int y)
@@ -73,7 +99,16 @@ namespace ColorTreasure.Runtime.Board
             return result;
         }
 
-        private void ApplyGravity()
+        private void ClearCells(IReadOnlyList<(int x, int y)> group)
+        {
+            foreach (var cell in group)
+            {
+                cells[cell.x, cell.y] = TileColor.None;
+                specials[cell.x, cell.y] = SpecialKind.None;
+            }
+        }
+
+        private void CollapseAndRefill()
         {
             for (var x = 0; x < Width; x++)
             {
@@ -81,11 +116,24 @@ namespace ColorTreasure.Runtime.Board
                 for (var y = 0; y < Height; y++)
                 {
                     if (cells[x, y] == TileColor.None) continue;
-                    cells[x, writeY++] = cells[x, y];
+
+                    if (writeY != y)
+                    {
+                        cells[x, writeY] = cells[x, y];
+                        specials[x, writeY] = specials[x, y];
+                        cells[x, y] = TileColor.None;
+                        specials[x, y] = SpecialKind.None;
+                    }
+
+                    writeY++;
                 }
 
                 while (writeY < Height)
-                    cells[x, writeY++] = TileColor.None;
+                {
+                    cells[x, writeY] = (TileColor)(random.Next(ColorCount) + 1);
+                    specials[x, writeY] = SpecialKind.None;
+                    writeY++;
+                }
             }
         }
 
