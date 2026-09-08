@@ -48,11 +48,11 @@ namespace ColorTreasure.Runtime.Gameplay
         public SpecialActivationResult ActivateSpecial(int x, int y)
         {
             if (!CanMove(x, y))
-                return new SpecialActivationResult(SpecialKind.None, x, y, new List<(int x, int y)>());
+                return EmptyActivation(x, y);
 
             var kind = board.GetSpecial(x, y);
             if (kind == SpecialKind.None)
-                return new SpecialActivationResult(SpecialKind.None, x, y, new List<(int x, int y)>());
+                return EmptyActivation(x, y);
 
             var affected = SpecialActivation.GetAffectedCells(kind, x, y, board.Width, board.Height);
             board.ClearCells(affected);
@@ -64,14 +64,17 @@ namespace ColorTreasure.Runtime.Gameplay
 
         public SpecialActivationResult ActivateSpecialCombo(int firstX, int firstY, int secondX, int secondY)
         {
-            if (!CanMove(firstX, firstY))
-                return new SpecialActivationResult(SpecialKind.None, firstX, firstY, new List<(int x, int y)>());
+            if (!CanMove(firstX, firstY) || !Inside(secondX, secondY))
+                return EmptyActivation(firstX, firstY);
 
             var first = board.GetSpecial(firstX, firstY);
             var second = board.GetSpecial(secondX, secondY);
+            if (first == SpecialKind.None || second == SpecialKind.None)
+                return EmptyActivation(firstX, firstY);
+
             var combined = SpecialComboRule.Resolve(first, second);
             if (combined == SpecialKind.None)
-                return new SpecialActivationResult(SpecialKind.None, firstX, firstY, new List<(int x, int y)>());
+                return EmptyActivation(firstX, firstY);
 
             var description = ComboResolutionRules.Describe(first, second);
             var affected = BuildComboCells(description, firstX, firstY, board.Width, board.Height);
@@ -84,7 +87,17 @@ namespace ColorTreasure.Runtime.Gameplay
 
         private bool CanMove(int x, int y)
         {
-            return MovesRemaining > 0 && x >= 0 && x < board.Width && y >= 0 && y < board.Height;
+            return MovesRemaining > 0 && Inside(x, y);
+        }
+
+        private bool Inside(int x, int y)
+        {
+            return x >= 0 && x < board.Width && y >= 0 && y < board.Height;
+        }
+
+        private static SpecialActivationResult EmptyActivation(int x, int y)
+        {
+            return new SpecialActivationResult(SpecialKind.None, x, y, new List<(int x, int y)>());
         }
 
         private static IReadOnlyList<(int x, int y)> BuildComboCells(
