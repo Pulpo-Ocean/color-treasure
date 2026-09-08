@@ -26,10 +26,10 @@ namespace ColorTreasure.Tests.EditMode
         {
             var board = new BoardModel(6, 6, 4, 5678);
             board.SetSpecial(2, 3, SpecialKind.LineBurst);
-            board.SetSpecial(2, 3, SpecialKind.CrossBurst);
+            board.SetSpecial(4, 3, SpecialKind.CrossBurst);
             var engine = new BoardMoveEngine(board, 10, 999);
 
-            var result = engine.ActivateSpecialCombo(2, 3, 2, 3);
+            var result = engine.ActivateSpecialCombo(2, 3, 4, 3);
 
             Assert.That(result.Kind, Is.EqualTo(SpecialKind.CrossBurst));
             Assert.That(result.AffectedCells.Count, Is.EqualTo(11));
