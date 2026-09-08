@@ -8,9 +8,12 @@ import { HomeScreen } from './components/HomeScreen';
 import { WorldMapScreen } from './components/WorldMapScreen';
 import { LevelSelectScreen } from './components/LevelSelectScreen';
 import { PlaceholderScreen } from './components/PlaceholderScreen';
+import { ShopScreen } from './components/ShopScreen';
 import { GameResultOverlay } from './components/GameResultOverlay';
 import './styles.css';
 import './components/game-result.css';
+import './components/shop.css';
+import './components/nav-layout.css';
 
 type TileColor = 'coral' | 'sun' | 'lagoon' | 'violet' | 'mint' | 'azure';
 const palette: Record<TileColor, string> = { coral: '#ff6b6b', sun: '#ffd166', lagoon: '#2ec4b6', violet: '#9b5de5', mint: '#80ed99', azure: '#4dabf7' };
@@ -34,7 +37,7 @@ function App() {
   const refreshAccount = useCallback(async () => { const [progressionResult, resourceResult] = await Promise.allSettled([getProgression(), getResourceBalances()]); if (progressionResult.status === 'fulfilled') setProgression(progressionResult.value); if (resourceResult.status === 'fulfilled') setResources(resourceResult.value); }, []);
   useEffect(() => { void refreshAccount(); }, [refreshAccount]);
   const navigate = (next: AppScreen) => setScreen(next); const playLevel = (level: number) => { setSelectedLevel(level); setScreen('game'); };
-  const content = screen === 'home' ? <HomeScreen onNavigate={navigate} onPlay={() => playLevel(progression?.current_level ?? 1)} progression={progression} resources={resources} /> : screen === 'map' ? <WorldMapScreen currentLevel={progression?.current_level ?? 1} completedLevels={progression?.completed_levels ?? []} onBack={() => navigate('home')} onNavigate={navigate} onPlay={playLevel} /> : screen === 'levels' ? <LevelSelectScreen currentLevel={progression?.current_level ?? 1} completedLevels={progression?.completed_levels ?? []} onBack={() => navigate('map')} onPlay={playLevel} /> : screen === 'game' ? <GameScreen levelId={selectedLevel} onBack={() => navigate('levels')} onProgressChanged={() => void refreshAccount()} /> : screen === 'collection' ? <PlaceholderScreen title="Your Crew" subtitle="Collect and grow your sea friends." onBack={() => navigate('home')} onNavigate={navigate} /> : screen === 'missions' ? <PlaceholderScreen title="Missions" subtitle="Complete objectives and earn rewards." onBack={() => navigate('home')} onNavigate={navigate} /> : screen === 'events' ? <PlaceholderScreen title="Events" subtitle="Limited-time treasure adventures." onBack={() => navigate('home')} onNavigate={navigate} /> : <PlaceholderScreen title="Shop" subtitle="Spend resources when you choose." onBack={() => navigate('home')} onNavigate={navigate} />;
+  const content = screen === 'home' ? <HomeScreen onNavigate={navigate} onPlay={() => playLevel(progression?.current_level ?? 1)} progression={progression} resources={resources} /> : screen === 'map' ? <WorldMapScreen currentLevel={progression?.current_level ?? 1} completedLevels={progression?.completed_levels ?? []} onBack={() => navigate('home')} onNavigate={navigate} onPlay={playLevel} /> : screen === 'levels' ? <LevelSelectScreen currentLevel={progression?.current_level ?? 1} completedLevels={progression?.completed_levels ?? []} onBack={() => navigate('map')} onPlay={playLevel} /> : screen === 'game' ? <GameScreen levelId={selectedLevel} onBack={() => navigate('levels')} onProgressChanged={() => void refreshAccount()} /> : screen === 'collection' ? <PlaceholderScreen title="Your Crew" subtitle="Collect and grow your sea friends." onBack={() => navigate('home')} onNavigate={navigate} /> : screen === 'missions' ? <PlaceholderScreen title="Missions" subtitle="Complete objectives and earn rewards." onBack={() => navigate('home')} onNavigate={navigate} /> : screen === 'events' ? <PlaceholderScreen title="Events" subtitle="Limited-time treasure adventures." onBack={() => navigate('home')} onNavigate={navigate} /> : screen === 'shop' ? <ShopScreen onBack={() => navigate('home')} onNavigate={navigate} resources={resources} /> : <PlaceholderScreen title="Shop" subtitle="Spend resources when you choose." onBack={() => navigate('home')} onNavigate={navigate} />;
   return <main className="app-root">{content}{screen !== 'game' && <BottomNav screen={screen} onNavigate={navigate} />}</main>;
 }
 export default App;
