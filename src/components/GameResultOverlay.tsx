@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { ChestReward } from '../lib/chestApi';
+import type { AvailableChest, ChestReward } from '../lib/chestApi';
 import { getAvailableChests, openChest } from '../lib/chestApi';
 import { ChestRewardOverlay } from './ChestRewardOverlay';
 
 type GameResultOverlayProps = { result: 'WIN' | 'FAIL'; level: number; rewards?: Record<string, unknown>; onRetry: () => void; onNext: () => void; onBack: () => void };
-
-type AvailableChest = { id: string; chest_code: string; claim_key: string; source_type: string; source_id: string; created_at: string };
 
 export function GameResultOverlay({ result, level, rewards, onRetry, onNext, onBack }: GameResultOverlayProps) {
   const win = result === 'WIN';
