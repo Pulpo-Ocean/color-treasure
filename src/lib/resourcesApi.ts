@@ -9,6 +9,7 @@ export type ResourceBalances = {
   fragments: number;
 };
 
+const RESOURCE_KEYS = ['coins', 'gems', 'lives', 'boosters', 'stars', 'fragments'] as const;
 const EMPTY: ResourceBalances = { coins: 0, gems: 0, lives: 0, boosters: 0, stars: 0, fragments: 0 };
 
 export async function getResourceBalances(): Promise<ResourceBalances> {
@@ -22,7 +23,12 @@ export async function getResourceBalances(): Promise<ResourceBalances> {
   const result = { ...EMPTY };
   for (const row of data ?? []) {
     const code = String(row.resource_code) as keyof ResourceBalances;
-    if (code in result) result[code] = Math.max(0, Number(row.balance));
+    if (!RESOURCE_KEYS.includes(code)) continue;
+    const balance = Number(row.balance);
+    if (!Number.isSafeInteger(balance) || balance < 0) {
+      throw new Error('RESOURCES_INVALID_BALANCE');
+    }
+    result[code] = balance;
   }
   return result;
 }
