@@ -13,6 +13,7 @@ namespace ColorTreasure.Runtime.Gameplay
 
         private BoardModel model;
         private BoardMoveEngine engine;
+        private float boardStep;
 
         private void Awake()
         {
@@ -22,6 +23,7 @@ namespace ColorTreasure.Runtime.Gameplay
 
             model = new BoardModel(boardConfig.width, boardConfig.height, boardConfig.colors, boardConfig.seed);
             engine = new BoardMoveEngine(model, boardConfig.moves, objectiveTarget);
+            boardStep = boardView.TileSize + boardView.Spacing;
             boardView.Build(model);
         }
 
@@ -40,10 +42,18 @@ namespace ColorTreasure.Runtime.Gameplay
 
             var world = targetCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, -targetCamera.transform.position.z));
             var local = boardView.transform.InverseTransformPoint(world);
-            var step = 1f + 0.08f;
-            var x = Mathf.RoundToInt((local.x + (model.Width - 1) * step * 0.5f) / step);
-            var y = Mathf.RoundToInt((local.y + (model.Height - 1) * step * 0.5f) / step);
+            var x = Mathf.RoundToInt((local.x + (model.Width - 1) * boardStep * 0.5f) / boardStep);
+            var y = Mathf.RoundToInt((local.y + (model.Height - 1) * boardStep * 0.5f) / boardStep);
             if (x < 0 || x >= model.Width || y < 0 || y >= model.Height) return;
+
+            var special = model.GetSpecial(x, y);
+            if (special != SpecialKind.None)
+            {
+                var specialResult = engine.ActivateSpecial(x, y);
+                if (specialResult.Kind != SpecialKind.None)
+                    boardView.Refresh();
+                return;
+            }
 
             var result = engine.ClearGroup(x, y);
             if (result.Accepted)
