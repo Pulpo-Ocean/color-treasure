@@ -13,6 +13,7 @@ import { GameResultOverlay } from './components/GameResultOverlay';
 import './styles.css';
 import './components/game-result.css';
 import './components/shop.css';
+import './components/nav-layout.css';
 
 type TileColor = 'coral' | 'sun' | 'lagoon' | 'violet' | 'mint' | 'azure';
 const palette: Record<TileColor, string> = { coral: '#ff6b6b', sun: '#ffd166', lagoon: '#2ec4b6', violet: '#9b5de5', mint: '#80ed99', azure: '#4dabf7' };
