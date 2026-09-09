@@ -16,6 +16,9 @@ namespace ColorTreasure.Runtime.Board
         private SpriteRenderer[,] renderers;
         private SpriteRenderer[,] specialRenderers;
 
+        public float TileSize => tileSize;
+        public float Spacing => spacing;
+
         public void Build(BoardModel board)
         {
             model = board;
